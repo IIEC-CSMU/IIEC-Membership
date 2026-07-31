@@ -3,9 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="IIEC — Institution's Innovation & Entrepreneurship Cell. Learn real skills, build projects, launch startups and grow into an innovator.">
+<meta name="description" content="IIEC — Incubation Innovation & Entrepreneurship Cell. Learn real skills, build projects, launch startups and grow into an innovator.">
 <meta name="theme-color" content="#FAFAFA">
-<title>IIEC — Institution's Innovation & Entrepreneurship Cell</title>
+<title>IIEC — Incubation Innovation & Entrepreneurship Cell</title>
+
+<link rel="icon" type="image/png" sizes="96x96" href="assets/iiec-logo-96.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/iiec-logo-192.png">
+<link rel="apple-touch-icon" href="assets/iiec-logo-192.png">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="IIEC — Incubation, Innovation, &amp; Entrepreneurship Cell">
+<meta property="og:description" content="Learn real skills, build projects, launch startups and grow into an innovator.">
+<meta property="og:image" content="assets/iiec-logo-512.png">
+<meta name="twitter:card" content="summary">
 
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link href="https://cdn.jsdelivr.net/fontsource/css/inter:400,500,600,700,800.css" rel="stylesheet">
@@ -141,9 +151,14 @@ section{padding:clamp(76px,9vw,120px) 0;position:relative}
 }
 .nav-inner{display:flex;align-items:center;justify-content:space-between;height:72px;gap:24px}
 .logo{display:inline-flex;align-items:center;gap:11px;font-weight:800;font-size:1.22rem;letter-spacing:-.02em;color:var(--ink)}
-.logo-mark{width:34px;height:34px;border-radius:10px;background:var(--ink);display:grid;place-items:center;flex:none;transition:transform .3s var(--ease)}
-.logo:hover .logo-mark{transform:rotate(45deg)}
-.logo-mark svg{width:17px;height:17px}
+.logo-mark{
+  width:40px;height:40px;border-radius:50%;flex:none;overflow:hidden;
+  background:#fff;display:grid;place-items:center;
+  box-shadow:0 1px 3px rgba(17,24,39,.18);
+  transition:transform .3s var(--ease),box-shadow .3s;
+}
+.logo:hover .logo-mark{transform:scale(1.07);box-shadow:0 4px 12px rgba(17,24,39,.22)}
+.logo-mark img{width:100%;height:100%;object-fit:contain;display:block}
 .logo-dot{color:var(--accent)}
 .nav-links{display:flex;gap:6px}
 .nav-links a{
@@ -388,8 +403,7 @@ body.loaded .uline path{stroke-dashoffset:0}
 .footer{background:#111827;color:#9CA3AF;padding:64px 0 0}
 .footer-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:44px;padding-bottom:52px}
 .footer .logo{color:#fff}
-.footer .logo-mark{background:#fff}
-.footer .logo-mark svg path{stroke:#111827}
+.footer .logo-mark{background:#fff;box-shadow:0 0 0 1px rgba(255,255,255,.25)}
 .footer-desc{font-size:.9rem;margin:18px 0 24px;max-width:34ch;line-height:1.7}
 .socials{display:flex;gap:10px}
 .socials a{
@@ -459,8 +473,8 @@ body.loaded .uline path{stroke-dashoffset:0}
 <header class="nav" id="navbar">
   <div class="container nav-inner">
     <a href="#home" class="logo" aria-label="IIEC home">
-      <span class="logo-mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2v20M2 12h20M4.9 4.9l14.2 14.2M19.1 4.9L4.9 19.1" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
+      <span class="logo-mark">
+        <img src="assets/iiec-logo-96.png" alt="" width="40" height="40" fetchpriority="high" decoding="async">
       </span>
       IIEC<span class="logo-dot">.</span>
     </a>
@@ -814,24 +828,19 @@ body.loaded .uline path{stroke-dashoffset:0}
               <option value="AIML">AI &amp; Machine Learning</option>
               <option value="DS">Data Science</option>
               <option value="ECE">Electronics &amp; Communication (ECE)</option>
-              <option value="EEE">Electrical &amp; Electronics (EEE)</option>
               <option value="MECH">Mechanical</option>
               <option value="CIVIL">Civil</option>
-              <option value="CHEM">Chemical</option>
-              <option value="BIOTECH">Biotechnology</option>
-              <option value="MBA">Management (MBA / BBA)</option>
               <option value="OTHER">Other</option>
             </select>
           </div>
           <div class="field">
             <label for="studyYear">Year of study <span class="opt">(optional)</span></label>
             <select id="studyYear" name="studyYear">
-              <option value="">Prefer not to say</option>
+              <option value="">Select Year</option>
               <option value="1">1st year</option>
               <option value="2">2nd year</option>
               <option value="3">3rd year</option>
               <option value="4">4th year</option>
-              <option value="other">Other</option>
             </select>
           </div>
         </div>
@@ -866,15 +875,14 @@ body.loaded .uline path{stroke-dashoffset:0}
     <div class="footer-grid">
       <div>
         <a href="#home" class="logo" aria-label="IIEC home">
-          <span class="logo-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2v20M2 12h20M4.9 4.9l14.2 14.2M19.1 4.9L4.9 19.1" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg></span>
+          <span class="logo-mark"><img src="assets/iiec-logo-96.png" alt="" width="40" height="40" loading="lazy" decoding="async"></span>
           IIEC<span class="logo-dot">.</span>
         </a>
-        <p class="footer-desc">Institution Innovation &amp; Entrepreneurship Cell — where students stop waiting for permission and start building.</p>
+        <p class="footer-desc">Incubation Innovation &amp; Entrepreneurship Cell — where students stop waiting for permission and start building.</p>
         <div class="socials">
-          <a href="#" aria-label="IIEC on GitHub"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.72-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.18-3.09-.12-.29-.51-1.46.11-3.05 0 0 .96-.31 3.15 1.18a10.9 10.9 0 0 1 5.74 0c2.19-1.49 3.15-1.18 3.15-1.18.62 1.59.23 2.76.11 3.05.73.81 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.25 5.67.41.35.77 1.05.77 2.12 0 1.53-.01 2.76-.01 3.14 0 .31.21.67.8.56A10.52 10.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg></a>
-          <a href="#" aria-label="IIEC on LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.36V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.55C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.72C24 .77 23.2 0 22.22 0z"/></svg></a>
-          <a href="#" aria-label="IIEC on X"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.24 2.25h3.31l-7.23 8.26 8.5 11.24h-6.66l-5.21-6.82-5.97 6.82H1.67l7.73-8.84L1.25 2.25h6.83l4.71 6.23 5.45-6.23zm-1.16 17.52h1.83L7.08 4.13H5.12l11.96 15.64z"/></svg></a>
-          <a href="#" aria-label="IIEC on Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+          <a href="https://www.linkedin.com/company/iiec-csmu" aria-label="IIEC on LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.36V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.55C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.72C24 .77 23.2 0 22.22 0z"/></svg></a>
+          <a href="twitter.com/iiec_csmu" aria-label="IIEC on X"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.24 2.25h3.31l-7.23 8.26 8.5 11.24h-6.66l-5.21-6.82-5.97 6.82H1.67l7.73-8.84L1.25 2.25h6.83l4.71 6.23 5.45-6.23zm-1.16 17.52h1.83L7.08 4.13H5.12l11.96 15.64z"/></svg></a>
+          <a href="https://www.instagram.com/iiec.csmu" aria-label="IIEC on Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
         </div>
       </div>
       <nav class="footer-col" aria-label="Quick links">
@@ -888,14 +896,11 @@ body.loaded .uline path{stroke-dashoffset:0}
       </nav>
       <div class="footer-col">
         <h4>Contact</h4>
-        <a href="mailto:hello@iiec.campus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>hello@iiec.campus</a>
-        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Innovation Lab · Block C, 2nd floor</span>
-        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Open hours: Mon–Fri · 4–7 PM</span>
+        <a href="mailto:hello@iiec.campus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>ecell-student-rep@csmu.ac.in</a>
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© <span id="year">2026</span> IIEC — Institution's Innovation &amp; Entrepreneurship Cell.</span>
-      <span class="mono">DESIGNED &amp; BUILT BY THE IIEC WEB TEAM ⌁ SHIP SOMETHING THIS WEEK</span>
+      <span>© <span id="year">2026</span> IIEC — Incubation Innovation &amp; Entrepreneurship Cell.</span>
     </div>
   </div>
 </footer>

@@ -28,6 +28,10 @@ var CONFIG = {
   SUMMARY_NAME:   'Summary',
   XLSX_FOLDER_ID: '1TH93VmoOlydJkjpY1p8jO4XWxwY1jSCc',
   XLSX_NAME:      'IIEC Interest List.xlsx',
+  /* Optional. Paste the ID of an existing .xlsx in your Drive to have the script
+     overwrite THAT file every time (from its URL: /file/d/<ID>/view).
+     Leave empty and the script manages its own file named XLSX_NAME. */
+  XLSX_FILE_ID:   '',
   NAMED_RANGE:    'InterestData',
   SHARED_SECRET:  '',      // '' = no token check
   NOTIFY_EMAIL:   ''       // '' = no email alerts; else 'you@gmail.com'
@@ -47,8 +51,50 @@ var THEME = { header:'#1D4ED8', headerText:'#FFFFFF', line:'#D1D5DB', band:'#F3F
 
 /* ------------------------------ ROUTES ------------------------------ */
 
-function doGet() {
+function doGet(e) {
+  var p = (e && e.parameter) || {};
+  if (p.diag) return json(diagnostics());
   return json({ ok:true, service:'IIEC interest form', time:new Date().toISOString() });
+}
+
+/**
+ * Open <your /exec URL>?diag=1 to see where the data actually is.
+ * Deliberately returns counts and file metadata only — no personal data, because
+ * this endpoint is public.
+ */
+function diagnostics() {
+  var out = { ok:true, time:new Date().toISOString() };
+
+  try {
+    var ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
+    var sheet = ss.getSheetByName(CONFIG.SHEET_NAME);
+    out.spreadsheet = { name:ss.getName(), id:CONFIG.SHEET_ID, tabs:ss.getSheets().map(function (s) { return s.getName(); }) };
+    out.sheet = sheet
+      ? { name:CONFIG.SHEET_NAME, dataRows:Math.max(sheet.getLastRow() - 1, 0), columns:sheet.getLastColumn() }
+      : { error:'tab "' + CONFIG.SHEET_NAME + '" not found' };
+  } catch (err) {
+    out.spreadsheet = { error:String(err && err.message || err) };
+  }
+
+  try {
+    var folder = DriveApp.getFolderById(CONFIG.XLSX_FOLDER_ID);
+    var files = [], it = folder.getFiles();
+    while (it.hasNext() && files.length < 25) {
+      var f = it.next();
+      files.push({
+        name:f.getName(), id:f.getId(), mimeType:f.getMimeType(),
+        bytes:f.getSize(), updated:f.getLastUpdated().toISOString()
+      });
+    }
+    out.folder = { name:folder.getName(), id:CONFIG.XLSX_FOLDER_ID, files:files };
+  } catch (err) {
+    out.folder = { error:String(err && err.message || err) };
+  }
+
+  out.trackedXlsxId = CONFIG.XLSX_FILE_ID ||
+    PropertiesService.getScriptProperties().getProperty('xlsxFileId') || null;
+
+  return out;
 }
 
 function doPost(e) {
@@ -100,9 +146,13 @@ function doPost(e) {
     }
 
     // Neither of these may break the submission.
-    var xlsxOk = false;
-    try { exportXlsx(); xlsxOk = true; }
-    catch (err) { console.warn('xlsx export failed: ' + err); }
+    var xlsxOk = false, xlsxId = null;
+    try {
+      var x = exportXlsx();
+      xlsxOk = true;
+      xlsxId = x.id;
+      console.log('xlsx updated: ' + x.id + ' (' + x.bytes + ' bytes, created=' + x.created + ')');
+    } catch (err) { console.warn('xlsx export failed: ' + err); }
 
     if (CONFIG.NOTIFY_EMAIL) {
       try {
@@ -111,7 +161,7 @@ function doPost(e) {
       } catch (err) { console.warn('notify failed: ' + err); }
     }
 
-    return json({ ok:true, row:rowNumber, xlsx:xlsxOk });
+    return json({ ok:true, row:rowNumber, xlsx:xlsxOk, xlsxId:xlsxId });
   } catch (err) {
     console.error(err);
     return json({ ok:false, error:String(err && err.message || err) });
@@ -119,6 +169,32 @@ function doPost(e) {
 }
 
 /* ------------------------------ SHEET / TABLE ------------------------------ */
+
+/**
+ * Deletes the empty default "Sheet1" and puts the data tab first, so the
+ * exported .xlsx opens on the interest list instead of a blank sheet.
+ */
+function tidyWorkbook() {
+  var ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
+  var sheets = ss.getSheets();
+
+  // drop leftover empty default tabs
+  sheets.forEach(function (s) {
+    var name = s.getName();
+    var isDefault = /^Sheet\s?\d+$/i.test(name);
+    var isOurs = (name === CONFIG.SHEET_NAME || name === CONFIG.SUMMARY_NAME);
+    if (isDefault && !isOurs && s.getLastRow() === 0 && ss.getSheets().length > 1) {
+      ss.deleteSheet(s);
+    }
+  });
+
+  // order: data first, summary second
+  var data = ss.getSheetByName(CONFIG.SHEET_NAME);
+  if (data) { ss.setActiveSheet(data); ss.moveActiveSheet(1); }
+  var summary = ss.getSheetByName(CONFIG.SUMMARY_NAME);
+  if (summary) { ss.setActiveSheet(summary); ss.moveActiveSheet(2); }
+  if (data) ss.setActiveSheet(data);          // leave the data tab selected
+}
 
 function getSheet() {
   var ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
@@ -285,35 +361,64 @@ function buildSummary() {
  * Exports the whole workbook as .xlsx into the Drive folder, updating the file
  * in place so its ID and share link never change.
  */
+var XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
 function exportXlsx() {
   var token = ScriptApp.getOAuthToken();
+  var props = PropertiesService.getScriptProperties();
 
-  var blob = UrlFetchApp.fetch(
+  // 1. snapshot the whole workbook as a real .xlsx
+  var res = UrlFetchApp.fetch(
     'https://docs.google.com/spreadsheets/d/' + CONFIG.SHEET_ID + '/export?format=xlsx',
-    { headers: { Authorization: 'Bearer ' + token } }
-  ).getBlob().setName(CONFIG.XLSX_NAME);
+    { headers: { Authorization: 'Bearer ' + token }, muteHttpExceptions: true }
+  );
+  if (res.getResponseCode() !== 200) {
+    throw new Error('Export failed ' + res.getResponseCode() + ': ' + res.getContentText().slice(0, 300));
+  }
+  var blob = res.getBlob().setName(CONFIG.XLSX_NAME);
+  var bytes = blob.getBytes();
+  if (bytes.length < 1000) throw new Error('Export returned only ' + bytes.length + ' bytes');
 
-  var folder = DriveApp.getFolderById(CONFIG.XLSX_FOLDER_ID);
-  var existing = folder.getFilesByName(CONFIG.XLSX_NAME);
+  // 2. work out which Drive file to overwrite
+  var target = CONFIG.XLSX_FILE_ID || props.getProperty('xlsxFileId') || '';
+  if (target) {
+    try {
+      var f = DriveApp.getFileById(target);
+      if (f.isTrashed() || f.getMimeType() !== XLSX_MIME) target = '';
+    } catch (err) { target = ''; }          // gone, renamed away or wrong type
+  }
+  if (!target) {
+    var folder = DriveApp.getFolderById(CONFIG.XLSX_FOLDER_ID);
+    var hits = folder.getFilesByName(CONFIG.XLSX_NAME);
+    while (hits.hasNext()) {
+      var hit = hits.next();
+      if (hit.getMimeType() === XLSX_MIME) { target = hit.getId(); break; }
+    }
+  }
 
-  if (existing.hasNext()) {
-    var fileId = existing.next().getId();
-    var res = UrlFetchApp.fetch(
-      'https://www.googleapis.com/upload/drive/v3/files/' + fileId + '?uploadType=media&supportsAllDrives=true',
+  // 3. overwrite in place, or create it the first time
+  if (target) {
+    var up = UrlFetchApp.fetch(
+      'https://www.googleapis.com/upload/drive/v3/files/' + target +
+        '?uploadType=media&supportsAllDrives=true&fields=id,name,size,modifiedTime',
       {
         method: 'patch',
-        contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        payload: blob.getBytes(),
+        contentType: XLSX_MIME,
+        payload: bytes,
         headers: { Authorization: 'Bearer ' + token },
         muteHttpExceptions: true
       }
     );
-    if (res.getResponseCode() >= 300) {
-      throw new Error('Drive update ' + res.getResponseCode() + ': ' + res.getContentText());
+    if (up.getResponseCode() >= 300) {
+      throw new Error('Drive update ' + up.getResponseCode() + ': ' + up.getContentText().slice(0, 300));
     }
-    return fileId;
+    props.setProperty('xlsxFileId', target);
+    return { id:target, bytes:bytes.length, created:false, info:up.getContentText() };
   }
-  return folder.createFile(blob).getId();
+
+  var created = DriveApp.getFolderById(CONFIG.XLSX_FOLDER_ID).createFile(blob);
+  props.setProperty('xlsxFileId', created.getId());
+  return { id:created.getId(), bytes:bytes.length, created:true, url:created.getUrl() };
 }
 
 /* ------------------------------ HELPERS ------------------------------ */
@@ -343,20 +448,26 @@ function setup() {
   var sheet = getSheet();
   styleTable(sheet);
   buildSummary();
-  console.log('sheet ready, rows: ' + Math.max(sheet.getLastRow() - 1, 0));
-  console.log('xlsx file id: ' + exportXlsx());
+  tidyWorkbook();
+  console.log('sheet ready, data rows: ' + Math.max(sheet.getLastRow() - 1, 0));
+  console.log('xlsx: ' + JSON.stringify(exportXlsx()));
 }
 
 /** Re-apply table formatting over whatever rows exist now. */
 function reformat() {
   styleTable(getSheet());
   buildSummary();
-  exportXlsx();
-  console.log('reformatted and exported');
+  tidyWorkbook();
+  console.log('xlsx: ' + JSON.stringify(exportXlsx()));
 }
 
 function refreshXlsxNow() {
-  console.log('xlsx file id: ' + exportXlsx());
+  console.log('xlsx: ' + JSON.stringify(exportXlsx()));
+}
+
+/** Prints exactly what ?diag=1 would return, straight into the editor log. */
+function showDiagnostics() {
+  console.log(JSON.stringify(diagnostics(), null, 2));
 }
 
 function testSubmit() {
